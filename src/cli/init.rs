@@ -19,6 +19,7 @@
 ///  11. Optionally install git hook
 
 use std::path::{Path, PathBuf};
+use std::io::{self, Write};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle};
 use crate::types::{Neo, NeoFile, NeoError, EntryPoint};
@@ -50,9 +51,19 @@ pub async fn run(project_root: PathBuf, agent: String) -> Result<(), anyhow::Err
             lang
         }
         None => {
-            println!("  {} Could not detect language.", "⚠".yellow());
-            println!("  {} Defaulting to generic mode.", "→".dimmed());
-            "unknown".to_string()
+            println!("  {} Could not detect language automatically.", "⚠".yellow());
+            print!("  Enter language (typescript/javascript/python/rust) or press Enter to skip: ");
+            io::stdout().flush().ok();
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap_or(0);
+            let lang = input.trim().to_lowercase();
+            if lang.is_empty() {
+                println!("  {} Proceeding in generic mode (no parser — deps won't be tracked).", "→".dimmed());
+                "unknown".to_string()
+            } else {
+                println!("  {} Language set to: {}", "✓".green(), lang.bold());
+                lang
+            }
         }
     };
 
@@ -169,13 +180,28 @@ pub async fn run(project_root: PathBuf, agent: String) -> Result<(), anyhow::Err
             );
         }
 
-        println!("\n  Confirm all? [Y/n/edit]: ");
-        // For MVP: auto-confirm all conventions
-        // Future: interactive confirmation loop
-        for conv in detected_conventions.iter_mut() {
-            conv.confirmed = true;
+        print!("\n  Keep all? [Y/n]: ");
+        io::stdout().flush().ok();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap_or(0);
+
+        if input.trim().to_lowercase() == "n" {
+            println!();
+            for conv in detected_conventions.iter_mut() {
+                print!("    Keep '{}: {}'? [Y/n]: ", conv.key, conv.value);
+                io::stdout().flush().ok();
+                let mut ans = String::new();
+                io::stdin().read_line(&mut ans).unwrap_or(0);
+                conv.confirmed = ans.trim().to_lowercase() != "n";
+            }
+            let kept = detected_conventions.iter().filter(|c| c.confirmed).count();
+            println!("  {} {}/{} conventions confirmed", "✓".green(), kept, detected_conventions.len());
+        } else {
+            for conv in detected_conventions.iter_mut() {
+                conv.confirmed = true;
+            }
+            println!("  {} All conventions confirmed", "✓".green());
         }
-        println!("  {} All conventions confirmed", "✓".green());
     }
 
     // ── Step 8: Detect entry points ──────────────────────────────────────

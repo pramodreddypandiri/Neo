@@ -1,0 +1,59 @@
+[package]
+name = "neo"
+version = "0.1.0"
+edition = "2021"
+description = "AI-native codebase map for coding agents"
+license = "MIT"
+
+# Produces the `neo` CLI binary
+[[bin]]
+name = "neo"
+path = "src/main.rs"
+
+# Core engine exposed as a library so it can be tested
+# and potentially reused by other tools in the future
+[lib]
+name = "neo_core"
+path = "src/lib.rs"
+
+[dependencies]
+# CLI argument parsing with derive macros
+# e.g. `neo init --agent claude`
+clap = { version = "4", features = ["derive"] }
+
+# Recursive directory walking
+# used by scanner to traverse codebase
+walkdir = "2"
+
+# Async runtime — needed for parallel AI API calls
+# without this, summarizing 200 files would be sequential and slow
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client for calling AI APIs (Anthropic, OpenAI etc.)
+reqwest = { version = "0.11", features = ["json"] }
+
+# Serialization/deserialization for internal data structures
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Ergonomic error handling
+# anyhow    → for application-level errors (CLI)
+# thiserror → for library-level typed errors (core engine)
+anyhow = "1"
+thiserror = "1"
+
+# Terminal UX
+# indicatif → progress bars during scanning
+# colored   → colored output for success/error messages
+indicatif = "0.17"
+colored = "2"
+
+# Timestamps for neo.md metadata
+chrono = { version = "0.4", features = ["serde"] }
+
+# Regex for import extraction in parsers
+regex = "1"
+
+[dev-dependencies]
+# Creates temporary directories for integration tests
+tempfile = "3"

@@ -17,23 +17,24 @@ use crate::types::NeoError;
 ///
 /// This is placed at the top of CLAUDE.md so it's the first
 /// thing the agent reads every session.
-const NEO_CLAUDE_INSTRUCTIONS: &str = r#"## NEO — Codebase Map (READ FIRST)
+const NEO_CLAUDE_INSTRUCTIONS: &str = r#"## NEO — Codebase Map
 
-A `neo.md` file exists in the project root containing the full codebase map.
+`neo.md` in the project root is the complete codebase index. It lists every file, its purpose, dependencies, and hotspots.
 
-**ALWAYS before searching the codebase:**
-1. Read `neo.md` first
-2. Use `neo.md` to locate files directly
-3. Only grep if `neo.md` doesn't have the answer
+**Navigation rules (strictly enforced):**
+1. Your FIRST action in every session must be: Read `neo.md`
+2. From `neo.md`, identify the exact files relevant to the task
+3. Read ONLY those specific files — nothing else
+4. Do NOT use Grep, Glob, or directory listings — `neo.md` already has this information
 
-**ALWAYS after making file changes:**
-Run: `neo update <space-separated list of files you changed>`
+**After making file changes:**
+Run: `neo update <files you changed>`
 Example: `neo update src/auth/token.ts src/api/user.ts`
 
-**NEVER:**
-- Grep the codebase for something neo.md already maps
-- Skip updating neo.md after changes
-- Edit neo.md manually (it is auto-generated)
+**Banned when neo.md exists:**
+- Using Grep or Glob to explore the codebase
+- Reading files not identified in neo.md as relevant
+- Editing neo.md manually (it is auto-generated)
 
 ---
 "#;

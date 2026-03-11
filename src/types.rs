@@ -143,6 +143,7 @@ impl Neo {
     }
 
     /// Finds a file entry by its path
+    #[allow(dead_code)]
     pub fn find_file(&self, path: &str) -> Option<&NeoFile> {
         self.files.iter().find(|f| f.path == path)
     }
